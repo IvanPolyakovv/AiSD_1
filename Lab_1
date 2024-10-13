@@ -1,0 +1,500 @@
+// Polyakov Ivan 3372, Lab 1
+
+#include <iostream>
+#include <sstream>
+#include <cmath>
+#include <string>
+#include <cctype>
+
+using namespace std;
+
+class DynamicArray {
+private:
+    double* data;
+    int capacity;
+    int size;      
+
+    void resize() {
+        capacity *= 2;
+        double* newData = new double[capacity];
+        for (int i = 0; i < size; ++i) {
+            newData[i] = data[i];
+        }
+        delete[] data;
+        data = newData;
+    }
+public:
+    DynamicArray() : size(0), capacity(2) {
+        data = new double[capacity];
+    }
+
+    ~DynamicArray() {
+        delete[] data;
+    }
+
+    void insert(int value) {
+        if (size == capacity) {
+            resize();
+        }
+        data[size++] = value;
+    }
+
+    void remove(int index) {
+        if (index >= size) {
+            cout << "Index out of range\n";
+        }
+        else
+        {
+            for (int i = index; i < size - 1; ++i) {
+                data[i] = data[i + 1];
+            }
+            --size;
+        }
+    }
+
+    double average() const {
+        if (size == 0) {
+            cout << "Array is empty\n";
+        }
+        else
+        {
+            double sum = 0;
+            for (int i = 0; i < size; ++i) {
+                sum += data[i];
+            }
+            return sum / size;
+        }
+    }
+
+    void print() const {
+        for (int i = 0; i < size; ++i) {
+            std::cout << data[i] << " ";
+        }
+        cout << endl;
+    }
+};
+
+class Node {
+public:
+    int data;
+    Node* next;
+    Node* prev;
+
+    Node(int value) : data(value), next(nullptr), prev(nullptr) {}
+};
+
+class DoublyLinkedList {
+private:
+    Node* head;
+    Node* tail;
+
+public:
+    DoublyLinkedList() : head(nullptr), tail(nullptr) {}
+
+    ~DoublyLinkedList() {
+        Node* current = head;
+        while (current) {
+            Node* nextNode = current->next;
+            delete current;
+            current = nextNode;
+        }
+    }
+
+    void insertAtHead(int value) {
+        Node* newNode = new Node(value);
+        if (!head) {
+            head = tail = newNode;
+        }
+        else {
+            newNode->next = head;
+            head->prev = newNode;
+            head = newNode;
+        }
+    }
+
+    void insertAtTail(int value) {
+        Node* newNode = new Node(value);
+        if (!tail) {
+            head = tail = newNode;
+        }
+        else {
+            tail->next = newNode;
+            newNode->prev = tail;
+            tail = newNode;
+        }
+    }
+
+    void deleteNode(int value) {
+        Node* current = head;
+        while (current) {
+            if (current->data == value) {
+                if (current->prev) {
+                    current->prev->next = current->next;
+                }
+                else {
+                    head = current->next;
+                }
+                if (current->next) {
+                    current->next->prev = current->prev;
+                }
+                else {
+                    tail = current->prev;
+                }
+                delete current;
+                return;
+            }
+            current = current->next;
+        }
+        std::cout << "Value " << value << " not found." << std::endl;
+    }
+
+    void displayForward() {
+        Node* current = head;
+        while (current) {
+            std::cout << current->data << " ";
+            current = current->next;
+        }
+        std::cout << std::endl;
+    }
+
+    void displayBackward() {
+        Node* current = tail;
+        while (current) {
+            std::cout << current->data << " ";
+            current = current->prev;
+        }
+        std::cout << std::endl;
+    }
+};
+
+class Stack {
+private:
+    struct Node {
+        int data;
+        Node* next;
+    };
+
+    Node* topNode;
+
+public:
+    Stack() : topNode(nullptr) {}
+
+    ~Stack() {
+        while (topNode) {
+            pop();
+        }
+    }
+
+    void push(int value) {
+        Node* newNode = new Node{ value, topNode };
+        topNode = newNode;
+    }
+
+    void pop() {
+        if (isEmpty()) {
+            cout << "Stack is empty\n";
+        }
+        else
+        {
+
+            Node* temp = topNode;
+            topNode = topNode->next;
+            delete temp;
+        }
+    }
+
+    int top() const {
+        if (isEmpty()) {
+            cout << "Stack is empty\n";
+        }
+        else
+        {
+            return topNode->data;
+        }
+    }
+
+    bool isEmpty() const {
+        return topNode == nullptr;
+    }
+
+    void display() const {
+        Node* current = topNode;
+        std::cout << "Stack (top to bottom): ";
+        while (current) {
+            std::cout << current->data << " ";
+            current = current->next;
+        }
+        std::cout << std::endl;
+    }
+
+    
+};
+
+int prior(string& c)
+{
+    if (c == "(")
+        return 1;
+    if (c == "+" || c == "-")
+        return 2;
+    if (c == "*" || c == "/")
+        return 3;
+    }
+}
+
+double action(double& value1, double& value2, string& oper)
+{
+    switch (oper)
+    {
+    case '+':
+        return value1 + value2;
+        break;
+    case '-':
+        return value1 - value2;
+        break;
+    case '*':
+        return value1 * value2;
+        break;
+    case '/':
+        return value1 / value2;
+        break;
+    default:
+        break;
+    }
+}
+
+void calculate(string& data)
+{
+    Stack numbers;
+    string num;
+    string sym;
+    double val1;
+    double val2;
+    for (int i = 0; i <= data.length(); i++)
+    {
+        sym = data[i];
+        if (operations.find(sym) != -1)
+        {
+            if (prefix)
+            {
+                val1 = stod(numbers.pop(0));
+                val2 = stod(numbers.pop(0));
+            }
+            else
+            {
+                val2 = stod(numbers.pop(0));
+                val1 = stod(numbers.pop(0));
+            }
+
+            numbers.push(to_string(action(val1, val2, sym)));
+        }
+        if (sym >= "0" && sym <= "9" || sym == ".")
+        {
+            num += sym;
+        }
+        if (sym == " ")
+        {
+            if (operations.find(data[i - 1]) != -1)
+            {
+                continue;
+            }
+            if (prefix)
+            {
+                for (int j = num.length() - 1, i = 0; j >= i; --j, ++i)
+                {
+                    swap(num[j], num[i]);
+                }
+            }
+            numbers.push(num);
+            num.erase(0, num.length());
+        }
+    }
+    numbers.pop();
+    cout << "\n";
+}
+
+void ReversePolishNotation(string& data, bool print = 1)
+{
+    Stack stack;
+    
+}
+
+
+int main()
+{
+    int choice = 0;
+    do
+    {
+        cout << "1. Dynamic Array\n"
+            << "2. Doubly Linked List\n"
+            << "3. Stack\n"
+            << "4. Sort Station\n"
+            << "0. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+        switch (choice)
+        {
+        case 0:
+            return 0;
+            break;
+        case 1:
+        {
+            DynamicArray arr; // Создаем динамический массив
+            int choiceArr, value, index;
+
+            do {
+                std::cout << "1. Insert element\n";
+                std::cout << "2. Remove element\n";
+                std::cout << "3. Calculate average\n";
+                std::cout << "4. Print\n";
+                std::cout << "0. Exit\n";
+                std::cout << "Enter your choice: ";
+                std::cin >> choiceArr;
+
+                switch (choiceArr) {
+                case 1:
+                {
+                    std::cout << "Enter the value: ";
+                    std::cin >> value;
+                    arr.insert(value);
+                    break;
+                }
+                case 2:
+                {
+                    std::cout << "Enter the index: ";
+                    std::cin >> index;
+                    arr.remove(index);
+                    break;
+                }
+                case 3:
+                {
+                    std::cout << "Average: " << arr.average() << std::endl;
+                    break;
+                }
+                case 4:
+                {
+                    arr.print();
+                    break;
+                }
+                case 0:
+                    break;
+                default:
+                    std::cout << "Error!" << std::endl;
+                }
+            } while (choiceArr != 0);
+            break;
+        }
+        case 2:
+        {
+            DoublyLinkedList list;
+            int choiceList, value;
+
+            do {
+                std::cout << "\n1. Insert at Head\n"
+                    "2. Insert at Tail\n"
+                    "3. Delete Node\n"
+                    "4. Display Forward\n"
+                    "5. Display Backward\n"
+                    "0. Exit\n"
+                    "Enter the choice: ";
+
+                std::cin >> choiceList;
+
+                switch (choiceList) {
+                case 1:
+                    std::cout << "Enter value to insert at head: ";
+                    std::cin >> value;
+                    list.insertAtHead(value);
+                    break;
+                case 2:
+                    std::cout << "Enter value to insert at tail: ";
+                    std::cin >> value;
+                    list.insertAtTail(value);
+                    break;
+                case 3:
+                    std::cout << "Enter value to delete: ";
+                    std::cin >> value;
+                    list.deleteNode(value);
+                    break;
+                case 4:
+                    std::cout << "List (Forward): ";
+                    list.displayForward();
+                    break;
+                case 5:
+                    std::cout << "List (Backward): ";
+                    list.displayBackward();
+                    break;
+                case 0:
+                    break;
+                default:
+                    std::cout << "Error.\n";
+                    break;
+                }
+            } while (choiceList != 0);
+            break;
+        }
+        case 3:
+        {
+            Stack stack;
+            int choiceStack, value;
+
+            do {
+                std::cout << "1. Push\n";
+                std::cout << "2. Pop\n";
+                std::cout << "3. Top\n";
+                std::cout << "4. Display\n";
+                std::cout << "5. Check if empty\n";
+                std::cout << "0. Exit\n";
+                std::cout << "Enter your choice: ";
+                std::cin >> choiceStack;
+
+                switch (choiceStack) {
+                case 1:
+                    std::cout << "Enter value to push: ";
+                    std::cin >> value;
+                    stack.push(value);
+                    break;
+                case 2:
+                        stack.pop();
+                        std::cout << "Element popped from stack.\n";
+                    break;
+                case 3:
+                        std::cout << "Top element: " << stack.top() << std::endl;
+                    
+                    break;
+                case 4:
+                    stack.display();
+                    break;
+                case 5:
+                    std::cout << (stack.isEmpty() ? "Stack is empty." : "Stack is not empty.") << std::endl;
+                    break;
+                case 0:
+                    break;
+                default:
+                    std::cout << "Error.\n";
+                }
+            } while (choiceStack != 0);
+
+            break;
+        }
+        case 4:
+        {
+            while (true) {
+                string input;
+                cout << "Enter your expression (or type 'exit' to quit): ";
+                getline(cin, input);
+
+                if (input == "exit") {
+                    break;
+                }
+
+                ReversePolishNotation(input, 1);
+                calculate(input);
+            }
+            break;
+        }
+        default:
+            cout << "Error!\n";
+        }
+    } while (choice != 0);
+}
+
