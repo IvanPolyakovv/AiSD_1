@@ -1,10 +1,10 @@
 // Polyakov Ivan 3372, Lab 1
 
 #include <iostream>
-#include <sstream>
-#include <cmath>
 #include <string>
-#include <cctype>
+#include <cstring>
+#include <cmath>
+#include <sstream>
 
 using namespace std;
 
@@ -12,7 +12,7 @@ class DynamicArray {
 private:
     double* data;
     int capacity;
-    int size;      
+    int size;
 
     void resize() {
         capacity *= 2;
@@ -170,45 +170,56 @@ public:
 class Stack {
 private:
     struct Node {
-        int data;
+        string data;
         Node* next;
     };
 
     Node* topNode;
 
+    // Вспомогательная рекурсивная функция для вывода элементов 
+    void displayRecursively(Node* node) const {
+    if (node == nullptr) {
+        return; // Базовый случай: достигли конца стека 
+    }
+        displayRecursively(node->next); // Рекурсивный вызов для следующего элемента
+        cout << node->data << " "; // Вывод данных после возврата из рекурсии 
+    }
+
+
 public:
     Stack() : topNode(nullptr) {}
 
     ~Stack() {
-        while (topNode) {
+        while (!isEmpty()) {
             pop();
         }
     }
 
-    void push(int value) {
+    void push(const string& value) {
         Node* newNode = new Node{ value, topNode };
         topNode = newNode;
     }
 
-    void pop() {
+    string pop() {
         if (isEmpty()) {
             cout << "Stack is empty\n";
+            return "";
         }
-        else
-        {
-
+        else {
             Node* temp = topNode;
+            string data = topNode->data;
             topNode = topNode->next;
             delete temp;
+            return data;
         }
     }
 
-    int top() const {
+    string top() const {
         if (isEmpty()) {
             cout << "Stack is empty\n";
+            return "";
         }
-        else
-        {
+        else {
             return topNode->data;
         }
     }
@@ -218,106 +229,194 @@ public:
     }
 
     void display() const {
-        Node* current = topNode;
-        std::cout << "Stack (top to bottom): ";
-        while (current) {
-            std::cout << current->data << " ";
-            current = current->next;
-        }
-        std::cout << std::endl;
+        cout << "Stack (bottom to top): ";
+        displayRecursively(topNode); // Запускаем рекурсивный вывод
+        cout << endl;
     }
-
-    
 };
 
-int prior(string& c)
-{
-    if (c == "(")
+bool isNumber(const string& s) {
+    istringstream iss(s);
+    double d;
+    return (iss >> d) && (iss.eof());
+}
+
+int precedence(const string& op) {
+    if (op == "+" || op == "-") {
         return 1;
-    if (c == "+" || c == "-")
+    }
+    else if (op == "*" || op == "/") {
         return 2;
-    if (c == "*" || c == "/")
-        return 3;
+    }
+    else if (op == "^") {
+        return 3; // Возведение в степень имеет более высокий приоритет 
+    }
+    else if (op == "sin" || op == "cos") {
+        return 4; // Функции имеют самый высокий приоритет
+    }
+    return 0; // Неизвестный оператор
+    }
+
+void shuntingYard(const string& expression, Stack& output, Stack& operators) {
+    istringstream iss(expression);
+    string token;
+
+    while (iss >> token) {
+        if (isNumber(token)) {
+            output.push(token);
+        }
+        else if (token == "+" || token == "-" || token == "*" || token == "/") {
+            while (!operators.isEmpty() && precedence(operators.top()) >= precedence(token)) {
+                output.push(operators.pop());
+            }
+            operators.push(token);
+        }
+        else if (token == "^")
+        {
+            while (!operators.isEmpty() && precedence(operators.top()) >= precedence(token)) {
+                output.push(operators.pop());
+            }
+            operators.push(token);
+        }
+        else if (token == "sin" || token == "cos") {
+            operators.push(token);
+        }
+        else if (token == "(") {
+            operators.push(token);
+        }
+        else if (token == ")") {
+            while (!operators.isEmpty() && operators.top() != "(") {
+                output.push(operators.pop());
+            }
+            operators.pop(); // Удаляем '(' из стека
+        }
+    }
+
+    while (!operators.isEmpty()) {
+        output.push(operators.pop());
     }
 }
 
-double action(double& value1, double& value2, string& oper)
-{
-    switch (oper)
-    {
-    case '+':
-        return value1 + value2;
-        break;
-    case '-':
-        return value1 - value2;
-        break;
-    case '*':
-        return value1 * value2;
-        break;
-    case '/':
-        return value1 / value2;
-        break;
-    default:
-        break;
-    }
-}
+    double evaluateRPN(Stack & output) {
+        string expression = collectStackElements(output);
+        cout << "RPN Expression: " << expression << endl;
 
-void calculate(string& data)
-{
-    Stack numbers;
-    string num;
-    string sym;
-    double val1;
-    double val2;
-    for (int i = 0; i <= data.length(); i++)
-    {
-        sym = data[i];
-        if (operations.find(sym) != -1)
-        {
-            if (prefix)
-            {
-                val1 = stod(numbers.pop(0));
-                val2 = stod(numbers.pop(0));
-            }
-            else
-            {
-                val2 = stod(numbers.pop(0));
-                val1 = stod(numbers.pop(0));
-            }
+        Stack stack;
+        istringstream iss(expression);
+        string token;
 
-            numbers.push(to_string(action(val1, val2, sym)));
-        }
-        if (sym >= "0" && sym <= "9" || sym == ".")
-        {
-            num += sym;
-        }
-        if (sym == " ")
-        {
-            if (operations.find(data[i - 1]) != -1)
-            {
-                continue;
+        while (iss >> token) {
+            if (isNumber(token)) {
+                stack.push(token);
             }
-            if (prefix)
-            {
-                for (int j = num.length() - 1, i = 0; j >= i; --j, ++i)
-                {
-                    swap(num[j], num[i]);
+            else {
+                double result = 0;
+
+                if (token == "sin" || token == "cos") {
+                    if (stack.isEmpty()) {
+                        cout << "Error: Insufficient operands for operation " << token << endl;
+                        return 0;
+                    }
+
+                    double operand = 0;
+                    try {
+                        operand = stod(stack.pop());
+                    }
+                    catch (const std::invalid_argument&) {
+                        cout << "Error: Invalid number format for operand." << endl;
+                        return 0;
+                    }
+
+                    if (token == "sin") {
+                        result = sin(operand);
+                    }
+                    else if (token == "cos") {
+                        result = cos(operand);
+                    }
                 }
+                else {
+                    if (stack.isEmpty()) {
+                        cout << "Error: Insufficient operands for operation " << token << endl;
+                        return 0;
+                    }
+
+                    double b = 0;
+                    try {
+                        b = stod(stack.pop());
+                    }
+                    catch (const std::invalid_argument&) {
+                        cout << "Error: Invalid number format for operand." << endl;
+                        return 0;
+                    }
+
+                    if (stack.isEmpty()) {
+                        cout << "Error: Insufficient operands for operation " << token << endl;
+                        return 0;
+                    }
+
+                    double a = 0;
+                    try {
+                        a = stod(stack.pop());
+                    }
+                    catch (const std::invalid_argument&) {
+                        cout << "Error: Invalid number format for operand." << endl;
+                        return 0;
+                    }
+
+                    if (token == "+") {
+                        result = a + b;
+                    }
+                    else if (token == "-") {
+                        result = a - b;
+                    }
+                    else if (token == "*") {
+                        result = a * b;
+                    }
+                    else if (token == "/") {
+                        if (b == 0) {
+                            cout << "Error: Division by zero." << endl;
+                            return 0;
+                        }
+                        result = a / b;
+                    }
+                    else if (token == "^") {
+                        result = pow(a, b);
+                    }
+                    else {
+                        cout << "Error: Unknown operator " << token << endl;
+                        return 0;
+                    }
+                }
+
+                stack.push(to_string(result));
             }
-            numbers.push(num);
-            num.erase(0, num.length());
+        }
+
+        if (stack.isEmpty()) {
+            cout << "Error: No result to return." << endl;
+            return 0;
+        }
+
+        try {
+            double finalResult = stod(stack.pop());
+            cout << "Result: " << finalResult << endl;
+            return finalResult;
+        }
+        catch (const std::invalid_argument&) {
+            cout << "Error: Invalid number format in final result." << endl;
+            return 0;
         }
     }
-    numbers.pop();
-    cout << "\n";
-}
 
-void ReversePolishNotation(string& data, bool print = 1)
-{
-    Stack stack;
-    
-}
+string collectStackElements(Stack& output) {
+    if (output.isEmpty()) {
+        return ""; // Базовый случай: стек пуст 
+    }
 
+        string token = output.pop(); // Извлекаем верхний элемент 
+        string rest = collectStackElements(output); // Рекурсивно собираем оставшиеся элементы
+        return rest + (rest.empty() ? "" : " ") + token; // Собираем строку
+    }
 
 int main()
 {
@@ -451,15 +550,15 @@ int main()
                 case 1:
                     std::cout << "Enter value to push: ";
                     std::cin >> value;
-                    stack.push(value);
+                    stack.push(to_string(value));
                     break;
                 case 2:
-                        stack.pop();
-                        std::cout << "Element popped from stack.\n";
+                    stack.pop();
+                    std::cout << "Element popped from stack.\n";
                     break;
                 case 3:
-                        std::cout << "Top element: " << stack.top() << std::endl;
-                    
+                    std::cout << "Top element: " << stack.top() << std::endl;
+
                     break;
                 case 4:
                     stack.display();
@@ -478,17 +577,22 @@ int main()
         }
         case 4:
         {
-            while (true) {
-                string input;
-                cout << "Enter your expression (or type 'exit' to quit): ";
-                getline(cin, input);
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-                if (input == "exit") {
+            while (true) {
+                string expression;
+                cout << "Enter the expression (exit): ";
+                getline(cin, expression);
+                if (expression == "exit") {
                     break;
                 }
-
-                ReversePolishNotation(input, 1);
-                calculate(input);
+                else
+                {
+                    Stack operators;
+                    Stack output;
+                    shuntingYard(expression, output, operators);
+                    evaluateRPN(output);
+                }
             }
             break;
         }
